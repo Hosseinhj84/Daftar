@@ -1,95 +1,3 @@
-// import { useState, useEffect } from "react";
-// import { Link } from "react-router-dom";
-// import apiClient from "../api/client";
-// import Layout from "../Components/Layout";
-
-// export default function InvoiceList() {
-//   const [invoices, setInvoices] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     loadInvoices();
-//   }, []);
-
-//   async function loadInvoices() {
-//     setLoading(true);
-//     const response = await apiClient.get("/invoices/");
-//     setInvoices(response.data);
-//     setLoading(false);
-//   }
-
-//   async function handleDelete(id) {
-//     if (!confirm("مطمئنید می‌خواهید این فاکتور را حذف کنید؟")) return;
-//     await apiClient.delete(`/invoices/${id}/`);
-//     loadInvoices();
-//   }
-
-//   async function handleDownloadPdf(invoice) {
-//     const response = await apiClient.get(`/invoices/${invoice.id}/pdf/`, {
-//         responseType:"blob",
-//     });
-//     const url = window.URL.createObjectURL(new Blob([response.data]));
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.setAttribute("download" , `${invoice.invoice_number}.pdf`);
-//     document.body.appendChild(link);
-//     link.click();
-//     link.remove();
-//   }
-
-//   return (
-//     <Layout>
-//       <div className="page-header">
-//         <h1>فاکتورها</h1>
-//         <Link to="/invoices/new" className="primary-btn">
-//           + فاکتور جدید
-//         </Link>
-//       </div>
-
-//       {loading ? (
-//         <p>در حال بارگذاری...</p>
-//       ) : invoices.length === 0 ? (
-//         <p className="empty-state">هنوز فاکتوری ثبت نشده است.</p>
-//       ) : (
-//         <table className="data-table">
-//           <thead>
-//             <tr>
-//               <th>شماره فاکتور</th>
-//               <th>مشتری</th>
-//               <th>تاریخ</th>
-//               <th>مبلغ (تومان)</th>
-//               <th>وضعیت</th>
-//               <th>عملیات</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {invoices.map((inv) => (
-//               <tr key={inv.id}>
-//                 <td>{inv.invoice_number}</td>
-//                 <td>{inv.client_name}</td>
-//                 <td>{inv.date}</td>
-//                 <td>{Number(inv.total_amount).toLocaleString("fa-IR")}</td>
-//                 <td>
-//                   <span className={`status-badge ${inv.status}`}>
-//                     {inv.status === "paid" ? "پرداخت‌شده" : "معوق"}
-//                   </span>
-//                 </td>
-//                 <td className="actions-cell">
-//                   <Link to={`/invoices/${inv.id}/edit`}>ویرایش</Link>
-//                   <button onClick={() => handleDownloadPdf(inv)}>دانلود PDF</button>
-//                   <button className="danger" onClick={() => handleDelete(inv.id)}>
-//                     حذف
-//                   </button>
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       )}
-//     </Layout>
-//   );
-// }
-
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -105,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import Layout from "../Components/Layout";
-import apiClient from "../api/client";
+import apiClient from "../api/Client";
 import "../Styles/InvoicesList.css";
 
 const ITEMS_PER_PAGE = 8;
