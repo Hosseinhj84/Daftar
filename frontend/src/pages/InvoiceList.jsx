@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import Layout from "../Components/Layout";
-import apiClient from "../api/client";
+import apiClient from "../api/Client";
 import "../Styles/InvoicesList.css";
 
 const ITEMS_PER_PAGE = 8;

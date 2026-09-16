@@ -21,7 +21,7 @@ import {
   YAxis,
 } from "recharts";
 
-import apiClient from "../api/client";
+import apiClient from "../api/Client";
 import Layout from "../Components/Layout";
 import "../Styles/Dashboard.css";
 
