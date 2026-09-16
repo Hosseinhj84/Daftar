@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User , Category , Client , Invoice , InvoiceItem , Transation
+from .models import Settings
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -83,3 +84,10 @@ class TransactionSerializer(serializers.ModelSerializer):
             "amount" , "date" , "description" , "created_at"
         ]
         read_only_fields = ["created_at"]
+
+class SettingsSerialaizer(serializers.ModelSerializer):
+    class Meta:
+        model = Settings
+        fields = [
+            "business_name" , "invoice_prefix" , "default_invoice_note" , "notify_overdue_email",
+        ]

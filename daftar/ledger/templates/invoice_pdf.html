@@ -1,4 +1,4 @@
-<!doctype html>
+<!-- <!doctype html>
 <html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
@@ -120,7 +120,10 @@
   </head>
   <body>
     <div class="header">
-      <h1>دفتر درآمد</h1>
+      <h1>
+        {% if settings.business_name %}{{ settings.business_name }}{% else
+        %}دفتر درآمد{% endif %}
+      </h1>
       <div class="invoice-meta">
         شماره فاکتور: {{ invoice.invoice_number }}<br />
         تاریخ: {{ invoice.date }}<br />
@@ -179,6 +182,679 @@
 
     {% if invoice.note %}
     <div class="note">{{ invoice.note }}</div>
+    {% elif settings.default_invoice_note %}
+    <div class="note">{{ settings.default_invoice_note }}</div>
     {% endif %}
+  </body>
+</html> -->
+
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+
+    <style>
+      @page {
+        size: A4;
+        margin: 18mm 16mm 20mm 16mm;
+      }
+
+      @font-face {
+        font-family: "Vazirmatn";
+        src: url("{{ font_regular_path }}");
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "Vazirmatn";
+        src: url("{{ font_bold_path }}");
+        font-weight: 700;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Vazirmatn", Tahoma, sans-serif;
+        direction: rtl;
+        color: #17201e;
+        background: #ffffff;
+        font-size: 12px;
+        line-height: 1.8;
+      }
+
+      body {
+        padding: 0;
+      }
+
+      /* =========================
+         Main container
+      ========================= */
+
+      .invoice {
+        width: 100%;
+      }
+
+      /* =========================
+         Header
+      ========================= */
+
+      .invoice-header {
+        width: 100%;
+        padding-bottom: 18px;
+        border-bottom: 2px solid #0f766e;
+        margin-bottom: 20px;
+      }
+
+      .header-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .header-table td {
+        border: 0;
+        padding: 0;
+        vertical-align: top;
+      }
+
+      .brand-cell {
+        width: 58%;
+        text-align: right;
+      }
+
+      .meta-cell {
+        width: 42%;
+        text-align: left;
+      }
+
+      .brand-name {
+        margin: 0;
+        color: #0f766e;
+        font-size: 24px;
+        line-height: 1.4;
+        font-weight: 700;
+      }
+
+      .brand-subtitle {
+        margin-top: 5px;
+        color: #6b7773;
+        font-size: 11px;
+      }
+
+      .invoice-title {
+        margin: 0 0 8px 0;
+        color: #17201e;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .invoice-number {
+        color: #4f5c58;
+        font-size: 11px;
+      }
+
+      .invoice-number strong {
+        color: #17201e;
+        font-weight: 700;
+      }
+
+      /* =========================
+         Status
+      ========================= */
+
+      .status-badge {
+        display: inline-block;
+        margin-top: 7px;
+        padding: 3px 11px;
+        border-radius: 20px;
+        font-size: 10px;
+        line-height: 1.6;
+        font-weight: 700;
+      }
+
+      .status-badge.paid {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .status-badge.pending {
+        background: #fff7ed;
+        color: #c2410c;
+      }
+
+      .status-badge.overdue {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .status-badge.default {
+        background: #f1f5f9;
+        color: #475569;
+      }
+
+      /* =========================
+         Information cards
+      ========================= */
+
+      .info-section {
+        width: 100%;
+        margin-bottom: 22px;
+      }
+
+      .info-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 10px 0;
+        margin-right: -10px;
+        margin-left: -10px;
+      }
+
+      .info-table td {
+        width: 50%;
+        padding: 13px 15px;
+        vertical-align: top;
+        border: 1px solid #e5ebe8;
+        border-radius: 8px;
+        background: #fafcfb;
+      }
+
+      .info-label {
+        display: block;
+        margin-bottom: 3px;
+        color: #7a8581;
+        font-size: 10px;
+      }
+
+      .info-value {
+        color: #17201e;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .info-value.secondary {
+        margin-top: 2px;
+        color: #596560;
+        font-size: 10px;
+        font-weight: 400;
+      }
+
+      /* =========================
+         Section title
+      ========================= */
+
+      .section-title {
+        margin: 0 0 9px 0;
+        color: #17201e;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .section-title::before {
+        content: "";
+        display: inline-block;
+        width: 3px;
+        height: 13px;
+        margin-left: 7px;
+        vertical-align: -2px;
+        background: #0f766e;
+        border-radius: 3px;
+      }
+
+      /* =========================
+         Items table
+      ========================= */
+
+      .items-section {
+        margin-top: 5px;
+      }
+
+      .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      .items-table thead {
+        display: table-header-group;
+      }
+
+      .items-table tr {
+        page-break-inside: avoid;
+      }
+
+      .items-table th {
+        padding: 10px 8px;
+        border-top: 1px solid #dfe7e3;
+        border-bottom: 1px solid #dfe7e3;
+        background: #f3f7f5;
+        color: #53605b;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: right;
+      }
+
+      .items-table td {
+        padding: 11px 8px;
+        border-bottom: 1px solid #edf1ef;
+        color: #26332f;
+        font-size: 11px;
+        text-align: right;
+        vertical-align: middle;
+      }
+
+      .items-table tbody tr:last-child td {
+        border-bottom: 1px solid #dfe7e3;
+      }
+
+      .col-type {
+        width: 11%;
+      }
+
+      .col-title {
+        width: 38%;
+      }
+
+      .col-quantity {
+        width: 11%;
+        text-align: center !important;
+      }
+
+      .col-unit {
+        width: 20%;
+      }
+
+      .col-total {
+        width: 20%;
+      }
+
+      .items-table .quantity {
+        text-align: center !important;
+        font-weight: 700;
+      }
+
+      .items-table .price {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .item-title {
+        font-weight: 700;
+        color: #17201e;
+      }
+
+      .item-type {
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 5px;
+        background: #eef7f5;
+        color: #0f766e;
+        font-size: 9px;
+      }
+
+      /* =========================
+         Bottom area
+      ========================= */
+
+      .bottom-section {
+        width: 100%;
+        margin-top: 22px;
+      }
+
+      .bottom-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .bottom-table td {
+        border: 0;
+        padding: 0;
+        vertical-align: top;
+      }
+
+      .note-cell {
+        width: 55%;
+        padding-left: 30px !important;
+      }
+
+      .summary-cell {
+        width: 45%;
+      }
+
+      /* =========================
+         Note
+      ========================= */
+
+      .note-box {
+        min-height: 80px;
+        padding: 13px 15px;
+        border: 1px solid #e5ebe8;
+        border-radius: 8px;
+        background: #fafcfb;
+      }
+
+      .note-title {
+        margin-bottom: 5px;
+        color: #53605b;
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .note-text {
+        color: #606c68;
+        font-size: 10px;
+        line-height: 2;
+        white-space: pre-line;
+      }
+
+      /* =========================
+         Summary
+      ========================= */
+
+      .summary-box {
+        width: 100%;
+        border: 1px solid #e1e8e5;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #ffffff;
+      }
+
+      .summary-row {
+        display: table;
+        width: 100%;
+        border-bottom: 1px solid #edf1ef;
+      }
+
+      .summary-row:last-child {
+        border-bottom: 0;
+      }
+
+      .summary-label,
+      .summary-value {
+        display: table-cell;
+        padding: 8px 12px;
+        font-size: 10px;
+      }
+
+      .summary-label {
+        width: 48%;
+        color: #6b7773;
+        text-align: right;
+      }
+
+      .summary-value {
+        width: 52%;
+        color: #26332f;
+        font-weight: 700;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      .summary-discount .summary-value {
+        color: #c2410c;
+      }
+
+      .summary-total {
+        background: #0f766e;
+      }
+
+      .summary-total .summary-label,
+      .summary-total .summary-value {
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      /* =========================
+         Footer
+      ========================= */
+
+      .invoice-footer {
+        margin-top: 28px;
+        padding-top: 12px;
+        border-top: 1px solid #e5ebe8;
+        text-align: center;
+        color: #89938f;
+        font-size: 9px;
+      }
+
+      .footer-brand {
+        color: #0f766e;
+        font-weight: 700;
+      }
+
+      /* =========================
+         Print improvements
+      ========================= */
+
+      @media print {
+        html,
+        body {
+          background: #ffffff;
+        }
+
+        .invoice {
+          width: 100%;
+        }
+
+        .items-table thead {
+          display: table-header-group;
+        }
+
+        .items-table tr,
+        .info-table td,
+        .note-box,
+        .summary-box {
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="invoice">
+      <!-- =========================
+           Header
+      ========================= -->
+
+      <header class="invoice-header">
+        <table class="header-table">
+          <tr>
+            <td class="brand-cell">
+              <h1 class="brand-name">
+                {% if settings.business_name %} {{ settings.business_name }} {% else %} دفتر درآمد {% endif %}
+              </h1>
+
+              <div class="brand-subtitle">فاکتور فروش</div>
+            </td>
+
+            <td class="meta-cell">
+              <h2 class="invoice-title">فاکتور</h2>
+
+              <div class="invoice-number">
+                شماره فاکتور:
+                <strong>{{ invoice.invoice_number }}</strong>
+              </div>
+
+              <div class="invoice-number">
+                تاریخ:
+                <strong>{{ invoice.date }}</strong>
+              </div>
+
+              {% if invoice.status == "paid" %}
+              <span class="status-badge paid"> پرداخت‌شده </span>
+
+              {% elif invoice.status == "pending" %}
+              <span class="status-badge pending"> در انتظار پرداخت </span>
+
+              {% elif invoice.status == "overdue" %}
+              <span class="status-badge overdue"> معوق </span>
+
+              {% else %}
+              <span class="status-badge default"> {{ invoice.status }} </span>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </header>
+
+      <!-- =========================
+           Customer information
+      ========================= -->
+
+      <section class="info-section">
+        <table class="info-table">
+          <tr>
+            <td>
+              <span class="info-label"> مشتری </span>
+
+              <div class="info-value">{{ invoice.client.name }}</div>
+
+              {% if invoice.client.phone %}
+              <div class="info-value secondary">{{ invoice.client.phone }}</div>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="info-label"> وضعیت پرداخت </span>
+
+              <div class="info-value">
+                {% if invoice.status == "paid" %} پرداخت‌شده {% elif invoice.status == "pending" %} در انتظار پرداخت {% elif invoice.status == "overdue" %} معوق {% else %} {{ invoice.status }} {% endif %}
+              </div>
+
+              <div class="info-value secondary">
+                شماره فاکتور: {{ invoice.invoice_number }}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- =========================
+           Invoice items
+      ========================= -->
+
+      <section class="items-section">
+        <h3 class="section-title">اقلام فاکتور</h3>
+
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th class="col-type">نوع</th>
+
+              <th class="col-title">شرح کالا / خدمت</th>
+
+              <th class="col-quantity">تعداد</th>
+
+              <th class="col-unit">قیمت واحد</th>
+
+              <th class="col-total">مبلغ</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for item in invoice.items.all %}
+
+            <tr>
+              <td>
+                <span class="item-type">
+                  {% if item.item_type == "service" %} خدمت {% else %} کالا {% endif %}
+                </span>
+              </td>
+
+              <td>
+                <span class="item-title"> {{ item.title }} </span>
+              </td>
+
+              <td class="quantity">{{ item.quantity }}</td>
+
+              <td class="price">{{ item.unit_price|floatformat:0 }} تومان</td>
+
+              <td class="price">{{ item.line_total|floatformat:0 }} تومان</td>
+            </tr>
+
+            {% empty %}
+
+            <tr>
+              <td
+                colspan="5"
+                style="text-align: center; color: #89938f; padding: 20px"
+              >
+                موردی برای نمایش وجود ندارد.
+              </td>
+            </tr>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+
+      <!-- =========================
+           Note + Summary
+      ========================= -->
+
+      <section class="bottom-section">
+        <table class="bottom-table">
+          <tr>
+            <td class="note-cell">
+              {% if invoice.note or settings.default_invoice_note %}
+
+              <div class="note-box">
+                <div class="note-title">توضیحات</div>
+
+                <div class="note-text">
+                  {% if invoice.note %} {{ invoice.note }} {% else %} {{ settings.default_invoice_note }} {% endif %}
+                </div>
+              </div>
+
+              {% endif %}
+            </td>
+
+            <td class="summary-cell">
+              <div class="summary-box">
+                <div class="summary-row">
+                  <div class="summary-label">جمع کل</div>
+
+                  <div class="summary-value">
+                    {{ invoice.subtotal|floatformat:0 }} تومان
+                  </div>
+                </div>
+
+                <div class="summary-row summary-discount">
+                  <div class="summary-label">تخفیف</div>
+
+                  <div class="summary-value">
+                    {{ invoice.discount_percent }}٪
+                  </div>
+                </div>
+
+                <div class="summary-row summary-total">
+                  <div class="summary-label">مبلغ نهایی</div>
+
+                  <div class="summary-value">
+                    {{ invoice.total_amount|floatformat:0 }} تومان
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- =========================
+           Footer
+      ========================= -->
+
+      <footer class="invoice-footer">
+        این فاکتور توسط
+        <span class="footer-brand">
+          {% if settings.business_name %} {{ settings.business_name }} {% else %} دفتر درآمد {% endif %}
+        </span>
+        صادر شده است.
+      </footer>
+    </div>
   </body>
 </html>

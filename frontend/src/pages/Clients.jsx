@@ -1,157 +1,3 @@
-// import { useState, useEffect } from "react";
-// import apiClient from "../api/client";
-// import Layout from "../Components/Layout";
-
-// export default function Clients() {
-//   const [clients, setClients] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [showModel, setShowModel] = useState(false);
-//   const [editingClient, setEditingClient] = useState(null);
-//   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
-//   const [error, setError] = useState("");
-
-//   useEffect(() => {
-//     loadClients();
-//   }, []);
-
-//   async function loadClients() {
-//     setLoading(true);
-//     try {
-//       const response = await apiClient.get("/clients/");
-//       setClients(response.data);
-//     } catch {
-//       setError("خطا در دریافت لیست مشتریان");
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
-
-//   function openAddModal() {
-//     setEditingClient(null);
-//     setForm({ name: "", phone: "", notes: "" });
-//     setShowModel(true);
-//   }
-
-//   function openEditModal(client) {
-//     setEditingClient(client);
-//     setForm({ name: client.name, phone: client.phone, notes: client.notes });
-//     setShowModel(true);
-//   }
-
-//   async function handleSubmit(e) {
-//     e.preventDefault();
-//     try {
-//       if (editingClient) {
-//         await apiClient.put(`/clients/${editingClient.id}/`, form);
-//       } else {
-//         await apiClient.post("/clients/", form);
-//       }
-//       setShowModel(false);
-//       loadClients();
-//     } catch {
-//       setError("خطا در ذخیره مشتری");
-//     }
-//   }
-
-//   async function handleDelete(id) {
-//     if (!confirm("مطمئنید میخواهید این مشتری را حذف کنید ؟")) return;
-//     try {
-//       await apiClient.delete(`/clients/${id}/`);
-//       loadClients();
-//     } catch {
-//       setError("این مشتری قابل حذف نیست (احتمالا فاکتور یا تراکنش مرتبط دارد)");
-//     }
-//   }
-
-//   return (
-//     <Layout>
-//       <div className="page-header">
-//         <h1>مشتریان</h1>
-//         <button className="primary-btn" onClick={openAddModal}>
-//           + مشتری جدید
-//         </button>
-//       </div>
-
-//       {error && <p className="error">{error}</p>}
-
-//       {loading ? (
-//         <p>در حال بارگذاری...</p>
-//       ) : clients.length === 0 ? (
-//         <p className="empty-state">هنوز مشتری‌ای ثبت نشده است.</p>
-//       ) : (
-//         <table className="data-table">
-//           <thead>
-//             <tr>
-//               <th>نام</th>
-//               <th>شماره تماس</th>
-//               <th>توضیحات</th>
-//               <th>عملیات</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {clients.map((client) => (
-//               <tr key={client.id}>
-//                 <td>{client.name}</td>
-//                 <td>{client.phone || "—"}</td>
-//                 <td>{client.notes || "—"}</td>
-//                 <td className="actions-cell">
-//                   <button onClick={() => openEditModal(client)}>ویرایش</button>
-//                   <button
-//                     className="danger"
-//                     onClick={() => handleDelete(client.id)}
-//                   >
-//                     حذف
-//                   </button>
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       )}
-
-//       {showModel && (
-//         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-//           <form
-//             className="modal-card"
-//             onClick={(e) => e.stopPropagation()}
-//             onSubmit={handleSubmit}
-//           >
-//             <h2>{editingClient ? "ویرایش مشتری" : "مشتری جدید"}</h2>
-
-//             <label>نام</label>
-//             <input
-//               value={form.name}
-//               onChange={(e) => setForm({ ...form, name: e.target.value })}
-//               required
-//             />
-
-//             <label>شماره تماس</label>
-//             <input
-//               value={form.phone}
-//               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-//             />
-
-//             <label>توضیحات</label>
-//             <textarea
-//               value={form.notes}
-//               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-//             />
-
-//             <div className="modal-actions">
-//               <button type="button" onClick={() => setShowModel(false)}>
-//                 انصراف
-//               </button>
-//               <button type="submit" className="primary-btn">
-//                 ذخیره
-//               </button>
-//             </div>
-//           </form>
-//         </div>
-//       )}
-//     </Layout>
-//   );
-// }
-
 import { useEffect, useMemo, useState } from "react";
 import apiClient from "../api/client";
 import Layout from "../Components/Layout";
@@ -371,6 +217,43 @@ export default function Clients() {
     }
   }
 
+  async function handleDownloadTemplate() {
+    const response = await apiClient.get("/clients/import-template/", {
+      responseType: "blob",
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "قالب-مشتریان.xlsx");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  async function handleImportFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await apiClient.post("/clients/import/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert(
+        `${response.data.created} مشتری با موفقیت اضافه شد.` +
+          (response.data.errors.length
+            ? `\n\nخطاها:\n${response.data.errors.join("\n")}`
+            : ""),
+      );
+      loadClients();
+    } catch {
+      alert("خطا در ایمپورت فایل.");
+    }
+    e.target.value = "";
+  }
+
   const filteredClients = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -395,6 +278,23 @@ export default function Clients() {
           <div>
             <div className="clients-title-row">
               <h1>مشتریان</h1>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button
+                  className="outline-btn"
+                  onClick={handleDownloadTemplate}
+                >
+                  دانلود قالب اکسل
+                </button>
+                <label className="outline-btn" style={{ cursor: "pointer" }}>
+                  ایمپورت از اکسل
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleImportFile}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </div>
 
               <span className="clients-count">
                 {clients.length.toLocaleString("fa-IR")} مشتری

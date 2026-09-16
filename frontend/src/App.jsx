@@ -9,6 +9,7 @@ import InvoiceList from "./pages/InvoiceList";
 import Transactions from "./pages/Transactions";
 import Dashboard from "./pages/Dashboard";
 import Report from "./pages/Report";
+import Settings from "./pages/Settings";
 
 export default function App() {
   return (
@@ -70,6 +71,14 @@ export default function App() {
             element={
               <ProductedRoute>
                 <Report />
+              </ProductedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProductedRoute>
+                <Settings />
               </ProductedRoute>
             }
           />
