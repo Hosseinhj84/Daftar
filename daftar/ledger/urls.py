@@ -17,6 +17,8 @@ urlpatterns = [
     path("transactions/import-template/", views.transactions_import_template, name="transactions_import_template"),
     path("invoices/import/", views.import_invoices, name="import_invoices"),
     path("invoices/import-template/", views.invoices_import_template, name="invoices_import_template"),
+    path("profile/", views.ProfileView.as_view(), name="profile"),
+    path("profile/change-password/", views.change_password, name="change_password"),
     path("", include(router.urls)),
     path("auth/register/", views.RegisterView.as_view(), name="register"),
     path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),

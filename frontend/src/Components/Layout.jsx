@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState , useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -14,8 +14,9 @@ import {
   ChevronDown,
 } from "lucide-react";
 import "../Styles/Layout.css";
-
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import apiClient from "../api/client";
 
 const navItems = [
   {
@@ -52,6 +53,11 @@ const navItems = [
 
 export default function Layout({ children }) {
   const { logout } = useAuth();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    apiClient.get("/profile/").then((res) => setProfile(res.data));
+  }, []);
   const navigate = useNavigate();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -77,11 +83,7 @@ export default function Layout({ children }) {
       />
 
       {/* Sidebar */}
-      <aside
-        className={`sidebar ${
-          isSidebarOpen ? "sidebar--open" : ""
-        }`}
-      >
+      <aside className={`sidebar ${isSidebarOpen ? "sidebar--open" : ""}`}>
         {/* Sidebar Header */}
         <div className="sidebar-header">
           <div className="brand">
@@ -91,9 +93,7 @@ export default function Layout({ children }) {
 
             <div className="brand-text">
               <span className="brand-name">دفتر درآمد</span>
-              <span className="brand-description">
-                مدیریت مالی فریلنسرها
-              </span>
+              <span className="brand-description">مدیریت مالی فریلنسرها</span>
             </div>
           </div>
 
@@ -130,9 +130,7 @@ export default function Layout({ children }) {
                       <Icon size={20} strokeWidth={1.9} />
                     </span>
 
-                    <span className="nav-link-label">
-                      {item.label}
-                    </span>
+                    <span className="nav-link-label">{item.label}</span>
                   </NavLink>
                 );
               })}
@@ -143,34 +141,47 @@ export default function Layout({ children }) {
         {/* Sidebar bottom */}
         <div className="sidebar-bottom">
           {/* User profile */}
-          <button
-            type="button"
+          <Link
+            to="/profile"
             className="sidebar-user"
             aria-label="پروفایل کاربر"
+            style={{ textDecoration: "none", color: "inherit" }}
           >
             <div className="user-avatar">
-              <span>ع</span>
+              {profile?.avatar ? (
+                <img
+                  src={profile.avatar}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "50%",
+                  }}
+                />
+              ) : (
+                <span>{(profile?.first_name || "؟").charAt(0)}</span>
+              )}
+
               <span className="user-status" />
             </div>
 
             <div className="user-info">
-              <span className="user-name">کاربر دفتر درآمد</span>
-              <span className="user-role">فریلنسر</span>
+              <span className="user-name">
+                {profile
+                  ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
+                    "بدون نام"
+                  : "..."}
+              </span>
+
+              <span className="user-role">{profile?.job_title || "کاربر"}</span>
             </div>
 
-            <ChevronDown
-              className="user-chevron"
-              size={17}
-              strokeWidth={1.8}
-            />
-          </button>
+            <ChevronDown className="user-chevron" size={17} strokeWidth={1.8} />
+          </Link>
 
           {/* Logout */}
-          <button
-            type="button"
-            className="logout-btn"
-            onClick={handleLogout}
-          >
+          <button type="button" className="logout-btn" onClick={handleLogout}>
             <LogOut size={19} strokeWidth={1.9} />
             <span>خروج از حساب</span>
           </button>
@@ -202,9 +213,7 @@ export default function Layout({ children }) {
         </header>
 
         {/* Page content */}
-        <main className="main-content">
-          {children}
-        </main>
+        <main className="main-content">{children}</main>
       </div>
     </div>
   );

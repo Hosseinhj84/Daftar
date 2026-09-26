@@ -6,6 +6,9 @@ from django.core.validators import MinValueValidator
 
 class User(AbstractUser):
     email= models.EmailField(unique=True)
+    job_title = models.CharField(max_length=100, blank=True)
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
+    
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
     

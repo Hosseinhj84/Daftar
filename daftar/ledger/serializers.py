@@ -44,7 +44,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
     items = InvoiceItemSerializer(many=True)
     subtotal = serializers.ReadOnlyField()
     total_amount = serializers.ReadOnlyField()
-    client_name = serializers.CharField(source="clinet.name", read_only=True)
+    client_name = serializers.CharField(source="client.name", read_only=True)
     
     class Meta:
         model = Invoice
@@ -91,3 +91,9 @@ class SettingsSerialaizer(serializers.ModelSerializer):
         fields = [
             "business_name" , "invoice_prefix" , "default_invoice_note" , "notify_overdue_email",
         ]
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "email", "first_name", "last_name", "job_title", "avatar"]
+        read_only_fields = ["id", "email"]

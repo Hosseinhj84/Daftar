@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.core.mail import send_mail
 import pandas as pd
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import parser_classes
 from rest_framework import viewsets, generics, permissions
 from rest_framework.permissions import IsAuthenticated
@@ -11,7 +11,7 @@ from django.db.models import Sum, Q
 from .models import Category, Client, Invoice, Transation , Settings , InvoiceItem
 from .serializers import (
     CategorySerializer, ClientSerializer, InvoiceSerializer,
-    TransactionSerializer, RegisterSerializer, SettingsSerialaizer
+    TransactionSerializer, RegisterSerializer, SettingsSerialaizer, ProfileSerializer
 )
 from django.db.models.functions import TruncMonth
 from datetime import date
@@ -473,49 +473,6 @@ def import_invoices(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def send_overdue_reminders_manual(request):
-    # user = request.user
-    
-    # overdue_invoices = Invoice.objects.filter(
-    #     user=user,
-    #     status__in=["pending","overdue"],
-    # )
-    
-    # if not overdue_invoices.exists():
-    #     return Response({
-    #         "detail": "هیچ فاکتور پرداخت شده ای برای ارسال یادآوری وجود ندارد"
-    #     },
-    #     status=status.HTTP_200_OK,
-    #     )
-    
-    # if not user.email:
-    #     return Response({
-    #         "detail": "برای حساب کاربری شما ایمیل ثبت نشده"
-    #     },
-    #     status=status.HTTP_400_BAD_REQUEST,
-    #     )
-    # invoice_count = overdue_invoices.count()
-    
-    # send_mail(
-    #     subject="یادآوری فاکتور های پرداخت نشده",
-    #     message=(
-    #         f"سلام {user.get_full_name() or user.username},\n\n"
-    #         f"شما {invoice_count} فاکتور پرداخت نشده دارید.\n"
-    #         "لطفا برای بررسی وضعیت انها وارد دفتر درآمد شوید"
-    #     ),
-    #     from_email=settings.DEFAULT_FROM_EMAIL,
-    #     recipient_list=[user.email],
-    #     fail_silently=False,
-    # )
-    
-    # return Response(
-    #     {
-    #         "default": "یادآوری فاکتور های پرداخت نشده با موفقیت ارسال شد.",
-    #         "invoice_count" :invoice_count,
-    #         "email": user.email,
-    #     },
-    #     status=status.HTTP_200_OK,
-    # )
-    
     user = request.user
 
     overdue_invoices = (
@@ -630,3 +587,30 @@ def send_overdue_reminders_manual(request):
         },
         status=status.HTTP_200_OK,
     )
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def change_password(request):
+    old_password = request.data.get("old_password")
+    new_password = request.data.get("new_password")
+
+    if not old_password or not new_password:
+        return Response({"detail": "رمز فعلی و رمز جدید هر دو لازم است."}, status=400)
+
+    if not request.user.check_password(old_password):
+        return Response({"detail": "رمز فعلی اشتباه است."}, status=400)
+
+    if len(new_password) < 8:
+        return Response({"detail": "رمز جدید باید حداقل ۸ کاراکتر باشد."}, status=400)
+
+    request.user.set_password(new_password)
+    request.user.save()
+    return Response({"detail": "رمز عبور با موفقیت تغییر کرد."})
+
+class ProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_object(self):
+        return self.request.user

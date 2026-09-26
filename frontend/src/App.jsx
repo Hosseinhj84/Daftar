@@ -10,6 +10,7 @@ import Transactions from "./pages/Transactions";
 import Dashboard from "./pages/Dashboard";
 import Report from "./pages/Report";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 
 export default function App() {
   return (
@@ -79,6 +80,14 @@ export default function App() {
             element={
               <ProductedRoute>
                 <Settings />
+              </ProductedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProductedRoute>
+                <Profile />
               </ProductedRoute>
             }
           />
