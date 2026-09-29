@@ -12,11 +12,12 @@ import {
   X,
   WalletCards,
   ChevronDown,
+  MessageCirclePlusIcon
 } from "lucide-react";
 import "../Styles/Layout.css";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import apiClient from "../api/client";
+import apiClient from "../api/Client";
 
 const navItems = [
   {
@@ -43,6 +44,11 @@ const navItems = [
     to: "/clients",
     label: "مشتریان",
     icon: Users,
+  },
+  {
+    to: "/chat",
+    label: "چت با هوش مصنوعی",
+    icon: MessageCirclePlusIcon,
   },
   {
     to: "/settings",

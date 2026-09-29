@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User , Category , Client , Invoice , InvoiceItem , Transation
+from .models import User , Category , ChatMessage , ChatConversation , Client , Invoice , InvoiceItem , Transation
 from .models import Settings
 
 class UserSerializer(serializers.ModelSerializer):
@@ -97,3 +97,23 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "email", "first_name", "last_name", "job_title", "avatar"]
         read_only_fields = ["id", "email"]
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ["id", "role", "content", "created_at"]
+
+
+class ChatConversationSerializer(serializers.ModelSerializer):
+    messages = ChatMessageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ChatConversation
+        fields = ["id", "title", "created_at", "messages"]
+
+
+class ChatConversationListSerializer(serializers.ModelSerializer):
+    """برای لیست مکالمات، بدون پیام‌ها (سبک‌تر)."""
+    class Meta:
+        model = ChatConversation
+        fields = ["id", "title", "created_at"]

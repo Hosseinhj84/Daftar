@@ -8,10 +8,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.db.models import Sum, Q
-from .models import Category, Client, Invoice, Transation , Settings , InvoiceItem
+from .models import Category, Client,ChatConversation, ChatMessage, Invoice, Transation , Settings , InvoiceItem
 from .serializers import (
     CategorySerializer, ClientSerializer, InvoiceSerializer,
-    TransactionSerializer, RegisterSerializer, SettingsSerialaizer, ProfileSerializer
+    TransactionSerializer,ChatConversationListSerializer,ChatConversationSerializer, RegisterSerializer, SettingsSerialaizer, ProfileSerializer
 )
 from django.db.models.functions import TruncMonth
 from datetime import date
@@ -23,6 +23,8 @@ from django.template.loader import render_to_string
 from weasyprint import HTML
 from rest_framework import status
 from .models import User
+from .ai_assistant import ask_gemini
+import traceback
 
 # Create your views here.
 
@@ -614,3 +616,126 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+class ChatConversationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return ChatConversation.objects.filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ChatConversationSerializer
+        return ChatConversationListSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+# @api_view(["POST"])
+# @permission_classes([permissions.IsAuthenticated])
+# def send_chat_message(request, conversation_id):
+#     conversation = ChatConversation.objects.filter(
+#         id=conversation_id, user=request.user
+#     ).first()
+#     if conversation is None:
+#         return Response({"detail": "گفتگو یافت نشد."}, status=404)
+
+#     user_message = request.data.get("message", "").strip()
+#     if not user_message:
+#         return Response({"detail": "پیام خالی است."}, status=400)
+
+#     history = list(conversation.messages.all())
+
+#     ChatMessage.objects.create(conversation=conversation, role="user", content=user_message)
+
+#     # اگه این اولین پیام مکالمه‌ست، عنوانش رو از روی همین پیام می‌سازیم
+#     if not history:
+#         conversation.title = user_message[:50]
+#         conversation.save()
+
+#     try:
+#         reply_text = ask_gemini(request.user, history, user_message)
+#     except Exception:
+#         return Response({"detail": "خطا در ارتباط با دستیار هوشمند."}, status=500)
+
+#     assistant_message = ChatMessage.objects.create(
+#         conversation=conversation, role="assistant", content=reply_text
+#     )
+
+#     return Response({
+#         "reply": assistant_message.content,
+#         "conversation_id": conversation.id,
+#         "conversation_title": conversation.title,
+#     })
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def send_chat_message(request, conversation_id):
+    conversation = ChatConversation.objects.filter(
+        id=conversation_id,
+        user=request.user,
+    ).first()
+
+    if conversation is None:
+        return Response(
+            {"detail": "گفتگو یافت نشد."},
+            status=404,
+        )
+
+    user_message = request.data.get("message", "").strip()
+
+    if not user_message:
+        return Response(
+            {"detail": "پیام خالی است."},
+            status=400,
+        )
+
+    history = list(
+        conversation.messages.all()
+    )
+
+    ChatMessage.objects.create(
+        conversation=conversation,
+        role="user",
+        content=user_message,
+    )
+
+    if not history:
+        conversation.title = user_message[:50]
+        conversation.save(update_fields=["title"])
+
+    try:
+        reply_text = ask_gemini(
+            request.user,
+            history,
+            user_message,
+        )
+
+    except Exception as e:
+        print("\n" + "=" * 60)
+        print("AI ASSISTANT ERROR")
+        print("=" * 60)
+        print("TYPE:", type(e).__name__)
+        print("MESSAGE:", str(e))
+        traceback.print_exc()
+        print("=" * 60 + "\n")
+
+        return Response(
+            {
+                "detail": "خطا در ارتباط با دستیار هوشمند."
+            },
+            status=500,
+        )
+
+    assistant_message = ChatMessage.objects.create(
+        conversation=conversation,
+        role="assistant",
+        content=reply_text,
+    )
+
+    return Response({
+        "reply": assistant_message.content,
+        "conversation_id": conversation.id,
+        "conversation_title": conversation.title,
+    })

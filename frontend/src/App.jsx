@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Report from "./pages/Report";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import Chat from "./pages/Chat";
 
 export default function App() {
   return (
@@ -88,6 +89,14 @@ export default function App() {
             element={
               <ProductedRoute>
                 <Profile />
+              </ProductedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProductedRoute>
+                <Chat />
               </ProductedRoute>
             }
           />

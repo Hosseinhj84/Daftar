@@ -9,6 +9,7 @@ router.register("categories", views.CategoryViewSet, basename="category")
 router.register("clients", views.ClientViewSet, basename="client")
 router.register("invoices", views.InvoiceViewSet, basename="invoice")
 router.register("transactions", views.TransActionViewSet, basename="transaction")
+router.register("conversations", views.ChatConversationViewSet, basename="conversation")
 
 urlpatterns = [
     path("clients/import/", views.import_clients, name="import_clients"),
@@ -19,6 +20,7 @@ urlpatterns = [
     path("invoices/import-template/", views.invoices_import_template, name="invoices_import_template"),
     path("profile/", views.ProfileView.as_view(), name="profile"),
     path("profile/change-password/", views.change_password, name="change_password"),
+        path("conversations/<int:conversation_id>/send/", views.send_chat_message, name="send_chat_message"),
     path("", include(router.urls)),
     path("auth/register/", views.RegisterView.as_view(), name="register"),
     path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
